@@ -1,0 +1,33 @@
+# Visual Studio user data
+.vs/
+*.suo
+*.user
+*.VC.db
+*.VC.db-shm
+*.VC.db-wal
+*.opendb
+
+# Build outputs and intermediate files
+x64/
+GM_31/x64/
+Debug/
+Release/
+*.obj
+!asset/model/*.obj
+*.pch
+*.pdb
+*.ilk
+*.idb
+*.iobj
+*.ipdb
+*.tlog
+*.lastbuildstate
+*.recipe
+*.nativecodeanalysis.xml
+*.log
+*.cso
+*.exe
+
+# Operating-system files
+Thumbs.db
+Desktop.ini

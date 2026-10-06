@@ -46,6 +46,7 @@ ExportedObj/
 *.csproj
 *.unityproj
 *.sln
+!DirectX/GM_31.sln
 *.slnx
 *.suo
 *.tmp
