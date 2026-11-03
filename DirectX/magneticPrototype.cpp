@@ -8,7 +8,9 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdio>
 #include <cwchar>
+#include <cstring>
 #include <limits>
 
 namespace
@@ -17,6 +19,7 @@ namespace
 	constexpr float MagnetRadius = 3.0f;
 	constexpr float PlayerMoveSpeed = 7.0f;
 	constexpr float Gravity = -20.0f;
+	constexpr size_t MaxHudVertices = 65536;
 
 	XMFLOAT4 NorthColor()
 	{
@@ -32,12 +35,61 @@ namespace
 	{
 		return polarity == MagnetLogic::Polarity::North ? NorthColor() : SouthColor();
 	}
+
+	std::array<unsigned char, 7> HudGlyph(char character)
+	{
+		switch (character)
+		{
+		case 'A': return { 0x0E, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x11 };
+		case 'B': return { 0x1E, 0x11, 0x11, 0x1E, 0x11, 0x11, 0x1E };
+		case 'C': return { 0x0E, 0x11, 0x10, 0x10, 0x10, 0x11, 0x0E };
+		case 'D': return { 0x1E, 0x11, 0x11, 0x11, 0x11, 0x11, 0x1E };
+		case 'E': return { 0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x1F };
+		case 'F': return { 0x1F, 0x10, 0x10, 0x1E, 0x10, 0x10, 0x10 };
+		case 'G': return { 0x0E, 0x11, 0x10, 0x17, 0x11, 0x11, 0x0F };
+		case 'H': return { 0x11, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x11 };
+		case 'I': return { 0x1F, 0x04, 0x04, 0x04, 0x04, 0x04, 0x1F };
+		case 'J': return { 0x07, 0x02, 0x02, 0x02, 0x12, 0x12, 0x0C };
+		case 'K': return { 0x11, 0x12, 0x14, 0x18, 0x14, 0x12, 0x11 };
+		case 'L': return { 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x1F };
+		case 'M': return { 0x11, 0x1B, 0x15, 0x15, 0x11, 0x11, 0x11 };
+		case 'N': return { 0x11, 0x19, 0x15, 0x13, 0x11, 0x11, 0x11 };
+		case 'O': return { 0x0E, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E };
+		case 'P': return { 0x1E, 0x11, 0x11, 0x1E, 0x10, 0x10, 0x10 };
+		case 'Q': return { 0x0E, 0x11, 0x11, 0x11, 0x15, 0x12, 0x0D };
+		case 'R': return { 0x1E, 0x11, 0x11, 0x1E, 0x14, 0x12, 0x11 };
+		case 'S': return { 0x0F, 0x10, 0x10, 0x0E, 0x01, 0x01, 0x1E };
+		case 'T': return { 0x1F, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04 };
+		case 'U': return { 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x0E };
+		case 'V': return { 0x11, 0x11, 0x11, 0x11, 0x11, 0x0A, 0x04 };
+		case 'W': return { 0x11, 0x11, 0x11, 0x15, 0x15, 0x15, 0x0A };
+		case 'X': return { 0x11, 0x11, 0x0A, 0x04, 0x0A, 0x11, 0x11 };
+		case 'Y': return { 0x11, 0x11, 0x0A, 0x04, 0x04, 0x04, 0x04 };
+		case 'Z': return { 0x1F, 0x01, 0x02, 0x04, 0x08, 0x10, 0x1F };
+		case '0': return { 0x0E, 0x11, 0x13, 0x15, 0x19, 0x11, 0x0E };
+		case '1': return { 0x04, 0x0C, 0x14, 0x04, 0x04, 0x04, 0x1F };
+		case '2': return { 0x0E, 0x11, 0x01, 0x02, 0x04, 0x08, 0x1F };
+		case '3': return { 0x1E, 0x01, 0x01, 0x0E, 0x01, 0x01, 0x1E };
+		case '4': return { 0x02, 0x06, 0x0A, 0x12, 0x1F, 0x02, 0x02 };
+		case '5': return { 0x1F, 0x10, 0x10, 0x1E, 0x01, 0x01, 0x1E };
+		case '6': return { 0x0E, 0x10, 0x10, 0x1E, 0x11, 0x11, 0x0E };
+		case '7': return { 0x1F, 0x01, 0x02, 0x04, 0x08, 0x08, 0x08 };
+		case '8': return { 0x0E, 0x11, 0x11, 0x0E, 0x11, 0x11, 0x0E };
+		case '9': return { 0x0E, 0x11, 0x11, 0x0F, 0x01, 0x01, 0x0E };
+		case ':': return { 0x00, 0x04, 0x04, 0x00, 0x04, 0x04, 0x00 };
+		case '-': return { 0x00, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00 };
+		case '/': return { 0x01, 0x02, 0x02, 0x04, 0x08, 0x08, 0x10 };
+		case '.': return { 0x00, 0x00, 0x00, 0x00, 0x00, 0x0C, 0x0C };
+		default: return {};
+		}
+	}
 }
 
 void MagneticPrototype::Init()
 {
 	m_Layer = 1;
 	CreateCubeMesh();
+	CreateHudBuffer();
 	Renderer::CreateVertexShader(
 		&m_VertexShader,
 		&m_VertexLayout,
@@ -45,6 +97,9 @@ void MagneticPrototype::Init()
 	Renderer::CreatePixelShader(
 		&m_PixelShader,
 		"shader\\magnetToonPS.cso");
+	Renderer::CreatePixelShader(
+		&m_HudPixelShader,
+		"shader\\hudColorPS.cso");
 	BuildFloor(1);
 }
 
@@ -54,6 +109,9 @@ void MagneticPrototype::Uninit()
 	SafeRelease(m_VertexLayout);
 	SafeRelease(m_VertexShader);
 	SafeRelease(m_PixelShader);
+	SafeRelease(m_HudPixelShader);
+	SafeRelease(m_HudVertexBuffer);
+	m_HudVertices.clear();
 	m_StaticBlocks.clear();
 	m_Bodies.clear();
 	GameObject::Uninit();
@@ -106,6 +164,19 @@ void MagneticPrototype::CreateCubeMesh()
 		"Create magnetic cube vertex buffer");
 }
 
+void MagneticPrototype::CreateHudBuffer()
+{
+	D3D11_BUFFER_DESC description{};
+	description.Usage = D3D11_USAGE_DYNAMIC;
+	description.ByteWidth = static_cast<UINT>(sizeof(VERTEX_3D) * MaxHudVertices);
+	description.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	description.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	ThrowIfFailed(
+		Renderer::GetDevice()->CreateBuffer(&description, nullptr, &m_HudVertexBuffer),
+		"Create magnetic HUD vertex buffer");
+	m_HudVertices.reserve(MaxHudVertices);
+}
+
 void MagneticPrototype::BuildFloor(int floorNumber)
 {
 	m_CurrentFloor = std::clamp(floorNumber, 1, 4);
@@ -120,6 +191,8 @@ void MagneticPrototype::BuildFloor(int floorNumber)
 	m_BalloonsPopped = 0;
 	m_CoilTimer = 0.0f;
 	m_DamageCooldown = 0.0f;
+	m_FloorIntroRemaining = 6.0f;
+	m_PolarityFlashRemaining = 0.0f;
 	m_FloorComplete = false;
 
 	switch (m_CurrentFloor)
@@ -280,14 +353,25 @@ void MagneticPrototype::AddBody(
 void MagneticPrototype::Update(float deltaTime)
 {
 	HandleFloorSelection();
+	if (Input::GetKeyTrigger('H'))
+	{
+		m_HelpVisible = !m_HelpVisible;
+	}
 	if (Input::GetKeyTrigger('R'))
 	{
 		BuildFloor(m_CurrentFloor);
 		return;
 	}
+	if (m_FloorComplete && Input::GetKeyTrigger(VK_RETURN))
+	{
+		BuildFloor(m_CurrentFloor == 4 ? 1 : m_CurrentFloor + 1);
+		return;
+	}
 
 	m_PreviousPlayerPosition = m_PlayerPosition;
 	m_DamageCooldown = std::max(0.0f, m_DamageCooldown - deltaTime);
+	m_FloorIntroRemaining = std::max(0.0f, m_FloorIntroRemaining - deltaTime);
+	m_PolarityFlashRemaining = std::max(0.0f, m_PolarityFlashRemaining - deltaTime);
 	HandleMagnetInput();
 	ApplyCoilInterference(deltaTime);
 	ApplyMagneticSurfaceForces(deltaTime);
@@ -315,6 +399,7 @@ void MagneticPrototype::HandleMagnetInput()
 	if (Input::GetKeyTrigger('V'))
 	{
 		m_PlayerPolarity = MagnetLogic::Opposite(m_PlayerPolarity);
+		m_PolarityFlashRemaining = 0.3f;
 	}
 
 	if (Input::GetKeyTrigger('C'))
@@ -325,30 +410,7 @@ void MagneticPrototype::HandleMagnetInput()
 		}
 		else
 		{
-			float closestDistance = std::numeric_limits<float>::max();
-			int closestIndex = -1;
-			const Vector3 forward = GetViewForward();
-			for (size_t index = 0; index < m_Bodies.size(); ++index)
-			{
-				Body& body = m_Bodies[index];
-				if (!body.Active || body.Kind != BodyKind::Crate)
-				{
-					continue;
-				}
-				Vector3 toBody = body.Position - m_PlayerPosition;
-				const float distance = toBody.length();
-				if (distance <= 0.001f || distance > MagnetRadius)
-				{
-					continue;
-				}
-				toBody /= distance;
-				if (Vector3::dot(forward, toBody) < 0.15f || distance >= closestDistance)
-				{
-					continue;
-				}
-				closestDistance = distance;
-				closestIndex = static_cast<int>(index);
-			}
+			const int closestIndex = FindGrabbableBodyIndex();
 			if (closestIndex >= 0)
 			{
 				m_HeldBodyIndex = closestIndex;
@@ -723,6 +785,54 @@ Vector3 MagneticPrototype::GetViewRight() const
 	return camera != nullptr ? camera->GetFlatRight() : Vector3(1.0f, 0.0f, 0.0f);
 }
 
+int MagneticPrototype::FindGrabbableBodyIndex() const
+{
+	float closestDistance = std::numeric_limits<float>::max();
+	int closestIndex = -1;
+	const Vector3 forward = GetViewForward();
+	for (size_t index = 0; index < m_Bodies.size(); ++index)
+	{
+		const Body& body = m_Bodies[index];
+		if (!body.Active || body.Held || body.Kind != BodyKind::Crate)
+		{
+			continue;
+		}
+
+		Vector3 toBody = body.Position - m_PlayerPosition;
+		const float distance = toBody.length();
+		if (distance <= 0.001f || distance > MagnetRadius)
+		{
+			continue;
+		}
+		toBody /= distance;
+		if (Vector3::dot(forward, toBody) < 0.15f || distance >= closestDistance)
+		{
+			continue;
+		}
+
+		closestDistance = distance;
+		closestIndex = static_cast<int>(index);
+	}
+	return closestIndex;
+}
+
+const char* MagneticPrototype::GetFloorGoalText() const
+{
+	switch (m_CurrentFloor)
+	{
+	case 1:
+		return "GOAL: POP 5 BALLOONS";
+	case 2:
+		return "GOAL: REACH THE EXIT";
+	case 3:
+		return "GOAL: CROSS THE COIL ROOM";
+	case 4:
+		return "GOAL: BUILD STAIRS TO EXIT";
+	default:
+		return "GOAL: EXPLORE";
+	}
+}
+
 void MagneticPrototype::Draw()
 {
 	Renderer::GetDeviceContext()->IASetInputLayout(m_VertexLayout);
@@ -768,8 +878,10 @@ void MagneticPrototype::DrawWorld() const
 	DrawCube(m_PlayerPosition, m_PlayerHalfExtent, playerColor);
 	DrawCube(m_PlayerPosition + Vector3(0.0f, 1.18f, 0.0f), { 0.34f, 0.34f, 0.34f }, { 0.95f, 0.92f, 0.78f, 1.0f });
 
-	for (const Body& body : m_Bodies)
+	const int grabbableBodyIndex = m_HeldBodyIndex >= 0 ? -1 : FindGrabbableBodyIndex();
+	for (size_t bodyIndex = 0; bodyIndex < m_Bodies.size(); ++bodyIndex)
 	{
+		const Body& body = m_Bodies[bodyIndex];
 		if (!body.Active)
 		{
 			continue;
@@ -778,6 +890,20 @@ void MagneticPrototype::DrawWorld() const
 		{
 		case BodyKind::Crate:
 			DrawCube(body.Position, body.HalfExtent, PolarityColor(body.Polarity));
+			if (static_cast<int>(bodyIndex) == grabbableBodyIndex)
+			{
+				DrawCube(
+					body.Position + Vector3(0.0f, body.HalfExtent.y + 0.35f, 0.0f),
+					{ 0.28f, 0.08f, 0.28f },
+					{ 1.0f, 0.82f, 0.16f, 1.0f });
+			}
+			else if (body.Held)
+			{
+				DrawCube(
+					body.Position + Vector3(0.0f, body.HalfExtent.y + 0.35f, 0.0f),
+					{ 0.28f, 0.08f, 0.28f },
+					{ 0.25f, 1.0f, 0.42f, 1.0f });
+			}
 			break;
 		case BodyKind::Balloon:
 			DrawCube(body.Position, body.HalfExtent, { 1.0f, 0.48f, 0.72f, 1.0f });
@@ -813,11 +939,256 @@ void MagneticPrototype::DrawWorld() const
 
 void MagneticPrototype::DrawHud() const
 {
+	m_HudVertices.clear();
+
+	const XMFLOAT4 panel{ 0.025f, 0.045f, 0.075f, 0.86f };
+	const XMFLOAT4 panelStrong{ 0.035f, 0.065f, 0.11f, 0.95f };
+	const XMFLOAT4 white{ 0.96f, 0.98f, 1.0f, 1.0f };
+	const XMFLOAT4 muted{ 0.72f, 0.80f, 0.88f, 1.0f };
+	const XMFLOAT4 gold{ 1.0f, 0.78f, 0.16f, 1.0f };
+	const XMFLOAT4 green{ 0.25f, 1.0f, 0.48f, 1.0f };
+	const XMFLOAT4 red{ 1.0f, 0.12f, 0.14f, 0.72f };
+
+	const int grabbableBodyIndex = m_HeldBodyIndex >= 0 ? -1 : FindGrabbableBodyIndex();
+	const XMFLOAT4 reticleColor =
+		m_HeldBodyIndex >= 0 ? green : (grabbableBodyIndex >= 0 ? gold : white);
+	const float centerX = static_cast<float>(SCREEN_WIDTH) * 0.5f;
+	const float centerY = static_cast<float>(SCREEN_HEIGHT) * 0.5f;
+	DrawHudRectangle(centerX - 13.0f, centerY - 1.5f, 26.0f, 3.0f, reticleColor);
+	DrawHudRectangle(centerX - 1.5f, centerY - 13.0f, 3.0f, 26.0f, reticleColor);
+
+	DrawHudRectangle(20.0f, 20.0f, 270.0f, 108.0f, panel);
+	char floorText[32]{};
+	sprintf_s(floorText, "FLOOR %d", m_CurrentFloor);
+	DrawHudText(floorText, 38.0f, 36.0f, 2.4f, white);
+
+	char healthText[32]{};
+	sprintf_s(healthText, "HP %d", m_Health);
+	DrawHudText(healthText, 38.0f, 72.0f, 2.0f, white);
+	char scoreText[32]{};
+	sprintf_s(scoreText, "SCORE %d", m_Score);
+	DrawHudText(scoreText, 38.0f, 99.0f, 1.65f, muted);
+
+	const XMFLOAT4 polarityColor = PolarityColor(m_PlayerPolarity);
+	const float badgeExpansion = m_PolarityFlashRemaining > 0.0f ? 5.0f : 0.0f;
+	DrawHudRectangle(
+		218.0f - badgeExpansion,
+		38.0f - badgeExpansion,
+		52.0f + badgeExpansion * 2.0f,
+		52.0f + badgeExpansion * 2.0f,
+		polarityColor);
+	DrawHudText(
+		m_PlayerPolarity == MagnetLogic::Polarity::North ? "N" : "S",
+		244.0f,
+		51.0f,
+		3.7f,
+		white,
+		true);
+	DrawHudText("POLE", 244.0f, 99.0f, 1.35f, muted, true);
+
+	char goalText[64]{};
+	if (m_CurrentFloor == 1)
+	{
+		sprintf_s(goalText, "GOAL: POP %d/5 BALLOONS", m_BalloonsPopped);
+	}
+	else
+	{
+		strcpy_s(goalText, GetFloorGoalText());
+	}
+	DrawHudRectangle(350.0f, 20.0f, 580.0f, 48.0f, panel);
+	DrawHudText(goalText, centerX, 37.0f, 2.15f, white, true);
+
+	DrawHudRectangle(1162.0f, 20.0f, 98.0f, 36.0f, panel);
+	DrawHudText("H HELP", 1211.0f, 32.0f, 1.55f, muted, true);
+
+	const char* actionText = "B PULSE   V SWITCH POLE";
+	XMFLOAT4 actionColor = white;
+	if (m_HeldBodyIndex >= 0)
+	{
+		actionText = "B THROW   C DROP";
+		actionColor = green;
+	}
+	else if (grabbableBodyIndex >= 0)
+	{
+		actionText = "C GRAB BOX";
+		actionColor = gold;
+	}
+	DrawHudRectangle(330.0f, 648.0f, 620.0f, 50.0f, panelStrong);
+	DrawHudText(actionText, centerX, 666.0f, 2.4f, actionColor, true);
+
+	if (m_HelpVisible)
+	{
+		DrawHudRectangle(315.0f, 142.0f, 650.0f, 430.0f, panelStrong);
+		DrawHudText("CONTROLS", centerX, 170.0f, 3.3f, white, true);
+		DrawHudText("WASD   MOVE", 390.0f, 225.0f, 2.3f, white);
+		DrawHudText("MOUSE  LOOK", 390.0f, 265.0f, 2.3f, white);
+		DrawHudText("SPACE  JUMP", 390.0f, 305.0f, 2.3f, white);
+		DrawHudText("V      SWITCH POLE", 390.0f, 345.0f, 2.3f, white);
+		DrawHudText("C      GRAB / DROP", 390.0f, 385.0f, 2.3f, white);
+		DrawHudText("B      PULSE / THROW", 390.0f, 425.0f, 2.3f, white);
+		DrawHudText("1-4    SELECT FLOOR", 390.0f, 465.0f, 2.3f, white);
+		DrawHudText("R      RESET", 390.0f, 505.0f, 2.3f, white);
+		DrawHudText("H      CLOSE HELP", 390.0f, 545.0f, 1.8f, muted);
+	}
+	else if (m_FloorIntroRemaining > 0.0f)
+	{
+		DrawHudRectangle(330.0f, 205.0f, 620.0f, 270.0f, panelStrong);
+		DrawHudText(floorText, centerX, 238.0f, 4.0f, white, true);
+		DrawHudText(GetFloorGoalText(), centerX, 300.0f, 2.3f, gold, true);
+
+		const char* firstHint = "V SWITCH POLE";
+		const char* secondHint = "USE MAGNET FORCE";
+		switch (m_CurrentFloor)
+		{
+		case 1:
+			firstHint = "C GRAB BOX";
+			secondHint = "B THROW AT BALLOON";
+			break;
+		case 2:
+			firstHint = "V SWITCH POLE";
+			secondHint = "USE WALLS AND FLOOR";
+			break;
+		case 3:
+			firstHint = "COIL SWITCHES YOUR POLE";
+			secondHint = "MOVE TO THE EXIT";
+			break;
+		case 4:
+			firstHint = "MOVE MAGNET BOXES";
+			secondHint = "BUILD STAIRS TO EXIT";
+			break;
+		default:
+			break;
+		}
+		DrawHudText(firstHint, centerX, 350.0f, 2.2f, white, true);
+		DrawHudText(secondHint, centerX, 390.0f, 2.2f, white, true);
+		DrawHudText("H HELP", centerX, 438.0f, 1.7f, muted, true);
+	}
+
+	if (m_FloorComplete)
+	{
+		DrawHudRectangle(335.0f, 225.0f, 610.0f, 225.0f, panelStrong);
+		DrawHudText("FLOOR CLEAR", centerX, 264.0f, 4.0f, green, true);
+		DrawHudText("ENTER  NEXT FLOOR", centerX, 337.0f, 2.6f, white, true);
+		DrawHudText("R  RETRY", centerX, 395.0f, 1.8f, muted, true);
+	}
+
+	if (m_DamageCooldown > 0.65f)
+	{
+		DrawHudRectangle(0.0f, 0.0f, static_cast<float>(SCREEN_WIDTH), 14.0f, red);
+		DrawHudRectangle(0.0f, static_cast<float>(SCREEN_HEIGHT) - 14.0f, static_cast<float>(SCREEN_WIDTH), 14.0f, red);
+		DrawHudRectangle(0.0f, 0.0f, 14.0f, static_cast<float>(SCREEN_HEIGHT), red);
+		DrawHudRectangle(static_cast<float>(SCREEN_WIDTH) - 14.0f, 0.0f, 14.0f, static_cast<float>(SCREEN_HEIGHT), red);
+	}
+
+	if (m_HudVertices.empty())
+	{
+		return;
+	}
+
 	Renderer::SetDepthEnable(false);
 	Renderer::SetWorldViewProjection2D();
-	const Vector3 center{ SCREEN_WIDTH * 0.5f, SCREEN_HEIGHT * 0.5f, 0.5f };
-	DrawCube(center, { 10.0f, 1.3f, 0.05f }, { 1.0f, 1.0f, 1.0f, 0.9f });
-	DrawCube(center, { 1.3f, 10.0f, 0.05f }, { 1.0f, 1.0f, 1.0f, 0.9f });
-	DrawCube({ 42.0f, 42.0f, 0.5f }, { 26.0f, 10.0f, 0.05f }, PolarityColor(m_PlayerPolarity));
+
+	D3D11_MAPPED_SUBRESOURCE mapped{};
+	ThrowIfFailed(
+		Renderer::GetDeviceContext()->Map(
+			m_HudVertexBuffer,
+			0,
+			D3D11_MAP_WRITE_DISCARD,
+			0,
+			&mapped),
+		"Map magnetic HUD vertex buffer");
+	std::memcpy(
+		mapped.pData,
+		m_HudVertices.data(),
+		m_HudVertices.size() * sizeof(VERTEX_3D));
+	Renderer::GetDeviceContext()->Unmap(m_HudVertexBuffer, 0);
+
+	UINT stride = sizeof(VERTEX_3D);
+	UINT offset = 0;
+	Renderer::GetDeviceContext()->IASetVertexBuffers(0, 1, &m_HudVertexBuffer, &stride, &offset);
+	Renderer::GetDeviceContext()->PSSetShader(m_HudPixelShader, nullptr, 0);
+	Renderer::GetDeviceContext()->Draw(static_cast<UINT>(m_HudVertices.size()), 0);
 	Renderer::SetDepthEnable(true);
+}
+
+void MagneticPrototype::DrawHudRectangle(
+	float left,
+	float top,
+	float width,
+	float height,
+	const XMFLOAT4& color) const
+{
+	if (width <= 0.0f || height <= 0.0f || m_HudVertices.size() + 6 > MaxHudVertices)
+	{
+		return;
+	}
+
+	const float right = left + width;
+	const float bottom = top + height;
+	const auto vertex = [&color](float x, float y)
+	{
+		VERTEX_3D result{};
+		result.Position = { x, y, 0.1f };
+		result.Normal = { 0.0f, 0.0f, -1.0f };
+		result.Diffuse = color;
+		result.TexCoord = { 0.0f, 0.0f };
+		return result;
+	};
+
+	m_HudVertices.push_back(vertex(left, top));
+	m_HudVertices.push_back(vertex(right, top));
+	m_HudVertices.push_back(vertex(right, bottom));
+	m_HudVertices.push_back(vertex(left, top));
+	m_HudVertices.push_back(vertex(right, bottom));
+	m_HudVertices.push_back(vertex(left, bottom));
+}
+
+void MagneticPrototype::DrawHudText(
+	const char* text,
+	float x,
+	float y,
+	float scale,
+	const XMFLOAT4& color,
+	bool centered) const
+{
+	if (text == nullptr || scale <= 0.0f)
+	{
+		return;
+	}
+	if (centered)
+	{
+		x -= MeasureHudText(text, scale) * 0.5f;
+	}
+
+	float cursorX = x;
+	for (const char* character = text; *character != '\0'; ++character)
+	{
+		const std::array<unsigned char, 7> glyph = HudGlyph(*character);
+		for (int row = 0; row < 7; ++row)
+		{
+			for (int column = 0; column < 5; ++column)
+			{
+				if ((glyph[static_cast<size_t>(row)] & (1u << (4 - column))) == 0)
+				{
+					continue;
+				}
+				DrawHudRectangle(
+					cursorX + static_cast<float>(column) * scale,
+					y + static_cast<float>(row) * scale,
+					scale * 0.84f,
+					scale * 0.84f,
+					color);
+			}
+		}
+		cursorX += scale * 6.0f;
+	}
+}
+
+float MagneticPrototype::MeasureHudText(const char* text, float scale) const
+{
+	if (text == nullptr || *text == '\0' || scale <= 0.0f)
+	{
+		return 0.0f;
+	}
+	return (static_cast<float>(std::strlen(text)) * 6.0f - 1.0f) * scale;
 }

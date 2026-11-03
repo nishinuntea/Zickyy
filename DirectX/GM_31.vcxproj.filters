@@ -198,5 +198,6 @@
     <FxCompile Include="shader\unlitTextureVS.hlsl" />
     <FxCompile Include="shader\magnetToonPS.hlsl" />
     <FxCompile Include="shader\magnetToonVS.hlsl" />
+    <FxCompile Include="shader\hudColorPS.hlsl" />
   </ItemGroup>
 </Project>
