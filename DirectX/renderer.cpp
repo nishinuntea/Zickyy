@@ -187,7 +187,7 @@ void Renderer::Init()
 	ThrowIfFailed(m_Device->CreateDepthStencilState(&depthStencilDesc, &m_DepthStateEnable),
 		"ID3D11Device::CreateDepthStencilState(enable)");
 
-	//depthStencilDesc.DepthEnable = FALSE;
+	depthStencilDesc.DepthEnable = FALSE;
 	depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	ThrowIfFailed(m_Device->CreateDepthStencilState(&depthStencilDesc, &m_DepthStateDisable),
 		"ID3D11Device::CreateDepthStencilState(disable)");

@@ -44,6 +44,9 @@ private:
 	ID3D11InputLayout* m_VertexLayout{};
 	ID3D11VertexShader* m_VertexShader{};
 	ID3D11PixelShader* m_PixelShader{};
+	ID3D11PixelShader* m_HudPixelShader{};
+	ID3D11Buffer* m_HudVertexBuffer{};
+	mutable std::vector<VERTEX_3D> m_HudVertices;
 
 	std::vector<StaticBlock> m_StaticBlocks;
 	std::vector<Body> m_Bodies;
@@ -60,10 +63,14 @@ private:
 	int m_BalloonsPopped{};
 	float m_CoilTimer{};
 	float m_DamageCooldown{};
+	float m_FloorIntroRemaining{};
+	float m_PolarityFlashRemaining{};
 	bool m_FloorComplete{};
+	bool m_HelpVisible{};
 	std::wstring m_LastCaption;
 
 	void CreateCubeMesh();
+	void CreateHudBuffer();
 	void BuildFloor(int floorNumber);
 	void BuildFloorOne();
 	void BuildFloorTwo();
@@ -106,6 +113,8 @@ private:
 		const Vector3& secondHalfExtent) const;
 	Vector3 GetViewForward() const;
 	Vector3 GetViewRight() const;
+	int FindGrabbableBodyIndex() const;
+	const char* GetFloorGoalText() const;
 	void ReleaseHeldBody(bool launch);
 
 	void DrawCube(
@@ -114,6 +123,20 @@ private:
 		const XMFLOAT4& color) const;
 	void DrawWorld() const;
 	void DrawHud() const;
+	void DrawHudRectangle(
+		float left,
+		float top,
+		float width,
+		float height,
+		const XMFLOAT4& color) const;
+	void DrawHudText(
+		const char* text,
+		float x,
+		float y,
+		float scale,
+		const XMFLOAT4& color,
+		bool centered = false) const;
+	float MeasureHudText(const char* text, float scale) const;
 
 public:
 	void Init() override;
