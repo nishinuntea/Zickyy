@@ -32,6 +32,7 @@ public class SceneTransition : MonoBehaviour
 
     //ロード中か記録して、連打による二重実行を防ぐ
     private bool isLoading;
+
     private void Update()
     {
         // キーボードが接続されていなければ何もしない

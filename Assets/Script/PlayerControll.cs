@@ -100,4 +100,9 @@ public class PlayerControll : MonoBehaviour
         // ‚’¼iY²jˆÚ“®‚ğÀs
         controller.Move(Yvelocity * Time.deltaTime);
     }
+
+    public void Launch(float height)
+    {
+        Yvelocity.y = Mathf.Sqrt(height * -2f * gravity);
+    }
 }

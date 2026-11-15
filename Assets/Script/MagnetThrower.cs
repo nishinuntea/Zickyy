@@ -1,6 +1,6 @@
-/*==============================================================================
+ï»¿/*==============================================================================
 
-    ¥Î‚ğ“Š‚°‚é		 [MagnetThrower.cs]
+    ç£çŸ³ã‚’æŠ•ã’ã‚‹		 [MagnetThrower.cs]
 														 Author : Nishimura
 														 Date   : 2026/11/14
 --------------------------------------------------------------------------------
@@ -9,89 +9,164 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[RequireComponent(typeof(LineRenderer))]
 public class MagnetThrower : MonoBehaviour 
 {
-    [Header("Settings")]
-    public GameObject magnetPrefab;
-    public Transform throwPoint;
-    public LineRenderer lineRenderer;
+    public GameObject magnetPrefab;   // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®Inspectorã§è¨­å®š
 
-    [Header("Throw Parameters")]
-    public float throwPower = 15f;
-    public int lineSegments = 30;
-    public float timeStep = 0.05f;
+    [Header("Throw")]
+    public float throwPower = 12f;
+    public float upwardForce = 4.5f;
+    public float spawnHeight = 0.8f;
+    public float spawnForwardOffset = 1.5f;
 
+    [Header("Preview")]
+    public int lineSegments = 40;
+    public float timeStep = 0.08f;
+    public string fieldTag = "Field";
+
+    private LineRenderer lineRenderer;
     private bool isAiming = false;
-    private bool wasFKeyPressedLastFrame = false;
+    private readonly RaycastHit[] rayBuffer = new RaycastHit[16];
+
+    void Awake()
+    {
+        lineRenderer = GetComponent<LineRenderer>();
+    }
+
+    void Start()
+    {
+        lineRenderer.useWorldSpace = true;
+        lineRenderer.startWidth = 0.08f;
+        lineRenderer.endWidth = 0.08f;
+        if (lineRenderer.sharedMaterial == null)
+            lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+        lineRenderer.startColor = Color.cyan;
+        lineRenderer.endColor = Color.blue;
+        lineRenderer.positionCount = 0;
+        lineRenderer.enabled = false;
+    }
 
     void Update()
     {
-        // ƒfƒtƒHƒ‹ƒg‚ÌInput System‚©‚çƒL[ƒ{[ƒh‚Ìó‘Ô‚ğæ“¾
         var keyboard = Keyboard.current;
         if (keyboard == null) return;
 
-        // FƒL[‚Ì‰Ÿ‰ºó‘Ô‚ğæ“¾
-        bool isFKeyPressed = keyboard.fKey.isPressed;
-        bool isFKeyReleased = keyboard.fKey.wasReleasedThisFrame;
-
-        // FƒL[‚ğ‰Ÿ‚µ‚½uŠÔiƒGƒCƒ€ŠJnj
-        if (isFKeyPressed && !wasFKeyPressedLastFrame)
+        // Fã‚­ãƒ¼ã‚’æŠ¼ã—ã¦ã„ã‚‹é–“ï¼šè»Œé“ã‚’è¡¨ç¤º
+        if (keyboard.fKey.isPressed)
         {
             isAiming = true;
-        }
-
-        // ƒGƒCƒ€’†iFƒL[’·‰Ÿ‚µ’†j‚Í•ú•¨ü‚Ì‹O“¹‚ğ•`‰æ‚µ‘±‚¯‚é
-        if (isAiming)
-        {
             DrawTrajectory();
         }
 
-        // FƒL[‚ğ—£‚µ‚½uŠÔi“Š±j
-        if (isAiming && isFKeyReleased)
+        // Fã‚­ãƒ¼ã‚’é›¢ã—ãŸç¬é–“ï¼šæŠ•ã’ã‚‹
+        if (isAiming && keyboard.fKey.wasReleasedThisFrame)
         {
             isAiming = false;
-            if (lineRenderer != null) lineRenderer.positionCount = 0;
-            ThrowMagnetAction();
+            lineRenderer.positionCount = 0;
+            lineRenderer.enabled = false;
+            Throw();
         }
+    }
 
-        wasFKeyPressedLastFrame = isFKeyPressed;
+    // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®å‘ãï¼ˆæ°´å¹³ï¼‰ï¼‹å°‘ã—ä¸Šå‘ã
+    Vector3 GetThrowDirection()
+    {
+        return (transform.forward + Vector3.up * 0.3f).normalized;
+    }
+
+    Vector3 GetStartVelocity()
+    {
+        return GetThrowDirection() * throwPower + Vector3.up * upwardForce;
+    }
+
+    Vector3 GetSpawnPosition()
+    {
+        return transform.position + transform.forward * spawnForwardOffset + Vector3.up * spawnHeight;
     }
 
     void DrawTrajectory()
     {
-        if (lineRenderer == null || throwPoint == null) return;
+        lineRenderer.enabled = true;
 
-        lineRenderer.positionCount = lineSegments;
-        Vector3 startPos = throwPoint.position;
-        Vector3 startVelocity = throwPoint.forward * throwPower;
+        Vector3 startPos = GetSpawnPosition();
+        Vector3 v = GetStartVelocity();
 
         Vector3[] points = new Vector3[lineSegments];
+        int count = lineSegments;
+
         for (int i = 0; i < lineSegments; i++)
         {
             float t = i * timeStep;
-            Vector3 point = startPos + startVelocity * t + 0.5f * Physics.gravity * t * t;
-            points[i] = point;
+            points[i] = startPos + v * t + 0.5f * Physics.gravity * t * t;
 
-            if (i > 0 && Physics.Linecast(points[i - 1], point, out RaycastHit hit))
+            if (i > 0 && TryFindFieldHit(points[i - 1], points[i], out Vector3 hit))
             {
-                lineRenderer.positionCount = i + 1;
-                points[i] = hit.point;
+                points[i] = hit;
+                count = i + 1;
                 break;
             }
         }
+
+        lineRenderer.positionCount = count;
         lineRenderer.SetPositions(points);
     }
 
-    void ThrowMagnetAction()
+    // è‡ªåˆ†ã‹è¦ªã®ã©ã‚Œã‹ã«Fieldã‚¿ã‚°ãŒä»˜ã„ã¦ã„ã‚Œã°OK
+    bool IsField(Collider col)
     {
-        if (magnetPrefab == null || throwPoint == null) return;
+        Transform t = col.transform;
+        while (t != null)
+        {
+            if (t.CompareTag(fieldTag)) return true;
+            t = t.parent;
+        }
+        return false;
+    }
 
-        GameObject magnet = Instantiate(magnetPrefab, throwPoint.position, throwPoint.rotation);
+    bool TryFindFieldHit(Vector3 from, Vector3 to, out Vector3 hitPoint)
+    {
+        hitPoint = to;
+        Vector3 delta = to - from;
+        float dist = delta.magnitude;
+        if (dist < 0.0001f) return false;
+
+        int n = Physics.RaycastNonAlloc(from, delta / dist, rayBuffer, dist,
+            ~0, QueryTriggerInteraction.Ignore);
+
+        float nearest = float.MaxValue;
+        bool found = false;
+        for (int i = 0; i < n; i++)
+        {
+            if (!IsField(rayBuffer[i].collider)) continue;
+            if (rayBuffer[i].distance < nearest)
+            {
+                nearest = rayBuffer[i].distance;
+                hitPoint = rayBuffer[i].point;
+                found = true;
+            }
+        }
+        return found;
+    }
+
+    void Throw()
+    {
+        if (magnetPrefab == null)
+        {
+            Debug.LogError("Magnet PrefabãŒã‚¤ãƒ³ã‚¹ãƒšã‚¯ã‚¿ãƒ¼ã«è¨­å®šã•ã‚Œã¦ã„ã¾ã›ã‚“");
+            return;
+        }
+
+        Vector3 velocity = GetStartVelocity();
+        GameObject magnet = Instantiate(magnetPrefab, GetSpawnPosition(),
+            Quaternion.LookRotation(GetThrowDirection()));
+
         Rigidbody rb = magnet.GetComponent<Rigidbody>();
         if (rb != null)
         {
-            // Unity 6‚ÌRigidbody‚Å‚Í linearVelocity ‚ğg—p
-            rb.linearVelocity = throwPoint.forward * throwPower;
+            rb.isKinematic = false;
+            rb.useGravity = true;
+            rb.linearVelocity = velocity;
         }
     }
 }
