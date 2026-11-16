@@ -31,37 +31,40 @@ void Player::Init()
 	m_Layer = 1;
 
 #if defined(_WIN64)
-	m_AnimationModel = AddComponent<AnimationModel>(this);
-	if (!m_AnimationModel->Load(
-		"asset\\model\\action_adventure\\X Bot.fbx"))
-	{
-		throw std::runtime_error(
-			"Failed to load animated player model: X Bot.fbx");
-	}
+	//m_AnimationModel = AddComponent<AnimationModel>(this);
+	//if (!m_AnimationModel->Load(
+	//	"asset\\model\\action_adventure\\X Bot.fbx"))
+	//{
+	//	throw std::runtime_error(
+	//		"Failed to load animated player model: X Bot.fbx");
+	//}
+	//
+	//const auto loadAnimation = [this](
+	//	const char* FileName,
+	//	const char* AnimationName)
+	//{
+	//	if (!m_AnimationModel->LoadAnimation(FileName, AnimationName))
+	//	{
+	//		throw std::runtime_error(
+	//			std::string("Failed to load player animation: ") + FileName);
+	//	}
+	//};
+	//loadAnimation(
+	//	"asset\\model\\action_adventure\\idle.fbx",
+	//	"Idle");
+	//loadAnimation(
+	//	"asset\\model\\action_adventure\\walking.fbx",
+	//	"Walking");
+	//loadAnimation(
+	//	"asset\\model\\action_adventure\\running.fbx",
+	//	"Running");
+	//m_AnimationModel->SetLocalScale(0.01f);
 
-	const auto loadAnimation = [this](
-		const char* FileName,
-		const char* AnimationName)
-	{
-		if (!m_AnimationModel->LoadAnimation(FileName, AnimationName))
-		{
-			throw std::runtime_error(
-				std::string("Failed to load player animation: ") + FileName);
-		}
-	};
-	loadAnimation(
-		"asset\\model\\action_adventure\\idle.fbx",
-		"Idle");
-	loadAnimation(
-		"asset\\model\\action_adventure\\walking.fbx",
-		"Walking");
-	loadAnimation(
-		"asset\\model\\action_adventure\\running.fbx",
-		"Running");
-	m_AnimationModel->SetLocalScale(0.01f);
+	ModelRenderer* modelRenderer = AddComponent<ModelRenderer>(this);
+	modelRenderer->Load("asset\\model\\boxPlayer.fbx");
 #else
 	ModelRenderer* modelRenderer = AddComponent<ModelRenderer>(this);
-	modelRenderer->Load("asset\\model\\player.obj");
+	modelRenderer->Load("asset\\model\\boxPlayer.fbx"); 
 #endif
 
 	Renderer::CreateVertexShader(
@@ -72,8 +75,8 @@ void Player::Init()
 		&m_PixelShader,
 		"shader\\unlitTexturePS.cso");
 
-	m_JumpSE = AddComponent<Audio>(this);
-	m_JumpSE->Load("asset\\audio\\wan.wav");
+	//m_JumpSE = AddComponent<Audio>(this);
+	//m_JumpSE->Load("asset\\audio\\wan.wav");
 
 	ResetMovement();
 }

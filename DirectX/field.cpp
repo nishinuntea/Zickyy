@@ -55,10 +55,10 @@ void Field::Init()
     Renderer::CreatePixelShader(&m_PixelShader,
         "shader\\unlitTexturePS.cso");
 
-//BGM再生
-    Audio* bgm = AddComponent<Audio>(this);
-    bgm->Load("asset\\audio\\bgm.wav");
-    bgm->Play(true);
+////BGM再生
+//    Audio* bgm = AddComponent<Audio>(this);
+//    bgm->Load("asset\\audio\\bgm.wav");
+//    bgm->Play(true);
 
 }
 
