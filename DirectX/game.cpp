@@ -35,7 +35,7 @@ namespace
 
 void Game::Init()
 {
-	Input::SetMouseLookEnabled(true);
+	//Input::SetMouseLookEnabled(true);
 	Manager::AddGameObject<MagneticCamera>();
 	Manager::AddGameObject<MagneticPrototype>();
 }
