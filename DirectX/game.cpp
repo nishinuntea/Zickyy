@@ -10,7 +10,8 @@
 #include "box.h"
 #include "grappleAnchor.h"
 #include "grappleVisual.h"
-#include "runner.h"
+#include "result.h"
+#include "title.h"
 #include "magneticCamera.h"
 #include "magneticPrototype.h"
 
@@ -67,6 +68,10 @@ void Game::Uninit()
 
 void Game::Update(float)
 {
+	if (Input::GetKeyTrigger(VK_RETURN))
+	{
+		Manager::ChangeScene<Result>();
+	}
 }
 
 void Game::Draw()

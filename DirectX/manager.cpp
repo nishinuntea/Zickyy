@@ -6,6 +6,7 @@
 #include "camera.h"
 #include "game.h"
 #include "title.h"
+#include "result.h"
 #include "Audio.h"
 #include "modelRenderer.h"
 
@@ -27,12 +28,9 @@ void Manager::Init(bool StartInGame)
 
     if (StartInGame)
     {
-        ChangeScene<Game>();
-    }
-    else
-    {
         ChangeScene<Title>();
     }
+
 }
 
 

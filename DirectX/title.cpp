@@ -22,8 +22,18 @@
 void Title::Init()
 {
 	Input::SetMouseLookEnabled(false);
-	SetWindowTextW(GetWindow(), L"RELIC RUN - Enter to start");
-	Manager::AddGameObject<Runner>(false);
+
+	//謎のランゲームが始まる
+	//SetWindowTextW(GetWindow(), L"RELIC RUN - Enter to start");
+	//Manager::AddGameObject<Runner>(false);
+
+	//タイトル表示
+	Manager::AddGameObject<Polygon2D>(
+		0.0f,
+		0.0f,
+		static_cast<float>(SCREEN_WIDTH),
+		static_cast<float>(SCREEN_HEIGHT),
+		L"asset\\texture\\Title1.png");
 }
 void Title::Uninit()
 {
@@ -31,9 +41,9 @@ void Title::Uninit()
 }
 void Title::Update(float)
 {
-	if (Input::GetKeyTrigger(VK_F2))
+	if (Input::GetKeyTrigger(VK_RETURN))
 	{
-		Manager::ChangeScene<WireGame>();
+		Manager::ChangeScene<Game>();
 	}
 }
 void Title::Draw()
