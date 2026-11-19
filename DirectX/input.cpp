@@ -91,12 +91,8 @@ bool Input::GetKeyPress(BYTE KeyCode)
 
 bool Input::GetKeyTrigger(BYTE KeyCode)
 {
-	return
-		m_KeyTriggers[KeyCode] ||
-		((m_KeyState[KeyCode] & 0x80) != 0 &&
-		(m_OldKeyState[KeyCode] & 0x80) == 0);
+	return m_KeyTriggers[KeyCode];
 }
-
 void Input::ProcessKeyDown(WPARAM KeyCode, LPARAM KeyData)
 {
 	// Preserve even a press/release pair between two fixed simulation ticks.
