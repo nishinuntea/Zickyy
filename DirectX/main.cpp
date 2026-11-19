@@ -1,5 +1,3 @@
-
-
 #include "main.h"
 #include "manager.h"
 #include <thread>
@@ -17,8 +15,6 @@ using namespace DirectX;
 
 #pragma comment(lib, "winmm.lib")
 
-//#include "DirectXTex.h"
-
 #if _DEBUG
 #pragma comment(lib, "DirectXTex_Debug.lib")
 #else
@@ -28,9 +24,11 @@ using namespace DirectX;
 const wchar_t* CLASS_NAME = L"ZickyyMagnetBetaWindow";
 const wchar_t* WINDOW_NAME = L"ZICKYY MAGNET BETA";
 
+#ifdef _DEBUG
+int g_CountFPS = 0;
+#endif
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
 
 HWND g_Window;
 
@@ -57,13 +55,17 @@ HWND GetWindow()
 	return g_Window;
 }
 
-
 int APIENTRY WinMain(
 	_In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE,
 	_In_ LPSTR commandLine,
 	_In_ int nCmdShow)
 {
+	DWORD dwExecLastTime;
+	DWORD dwFPSLastTime;
+	DWORD dwCurrentTime;
+	DWORD dwFrameCount;
+
 	WNDCLASSEXW wcex{};
 	wcex.cbSize = sizeof(WNDCLASSEXW);
 	wcex.lpfnWndProc = WndProc;
@@ -77,7 +79,6 @@ int APIENTRY WinMain(
 
 	try
 	{
-		// Allow launching x64/Release/GM_31.exe directly from Explorer.
 		if (!std::filesystem::exists("asset/model"))
 		{
 			wchar_t executable[MAX_PATH]{};
@@ -131,8 +132,6 @@ int APIENTRY WinMain(
 		comInitialized = true;
 
 		managerStarted = true;
-		// Start the magnetic beta immediately. The old runner title remains
-		// available for regression checks with the --title argument.
 		const bool startInGame =
 			commandLine == nullptr ||
 			strstr(commandLine, "--title") == nullptr;
@@ -141,11 +140,9 @@ int APIENTRY WinMain(
 		ShowWindow(g_Window, nCmdShow);
 		UpdateWindow(g_Window);
 
-		using Clock = std::chrono::steady_clock;
-		constexpr double FixedStep = 1.0 / 60.0;
-		constexpr double MaxFrameTime = 0.25;
-		auto previousTime = Clock::now();
-		double accumulator = 0.0;
+		timeBeginPeriod(1);
+		dwExecLastTime = dwFPSLastTime = timeGetTime();
+		dwCurrentTime = dwFrameCount = 0;
 
 		MSG msg{};
 		bool running = true;
@@ -166,21 +163,35 @@ int APIENTRY WinMain(
 				break;
 			}
 
-			const auto currentTime = Clock::now();
-			const double frameTime = std::min(
-				std::chrono::duration<double>(currentTime - previousTime).count(),
-				MaxFrameTime);
-			previousTime = currentTime;
-			accumulator += frameTime;
+			dwCurrentTime = timeGetTime();
 
-			while (accumulator >= FixedStep)
+			if ((dwCurrentTime - dwFPSLastTime) >= 1000)
 			{
-				Manager::Update(static_cast<float>(FixedStep));
-				accumulator -= FixedStep;
+#ifdef _DEBUG
+				g_CountFPS = dwFrameCount;
+#endif
+				dwFPSLastTime = dwCurrentTime;
+				dwFrameCount = 0;
 			}
 
-			Manager::Draw(static_cast<float>(accumulator / FixedStep));
+			if ((dwCurrentTime - dwExecLastTime) >= (1000 / 60))
+			{
+				dwExecLastTime = dwCurrentTime;
+
+#ifdef _DEBUG
+				wchar_t debugStr[256];
+				wsprintfW(debugStr, L"%s FPS:%d", WINDOW_NAME, g_CountFPS);
+				SetWindowTextW(g_Window, debugStr);
+#endif
+
+				Manager::Update(1.0f / 60.0f);
+				Manager::Draw(1.0f);
+
+				dwFrameCount++;
+			}
 		}
+
+		timeEndPeriod(1);
 
 		Manager::Uninit();
 		managerStarted = false;
@@ -210,12 +221,8 @@ int APIENTRY WinMain(
 	}
 }
 
-
-
-
 LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-
 	switch (uMsg)
 	{
 	case WM_INPUT:
@@ -242,4 +249,3 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 }
-
