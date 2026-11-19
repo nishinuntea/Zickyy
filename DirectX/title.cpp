@@ -23,10 +23,6 @@ void Title::Init()
 {
 	Input::SetMouseLookEnabled(false);
 
-	//謎のランゲームが始まる
-	//SetWindowTextW(GetWindow(), L"RELIC RUN - Enter to start");
-	//Manager::AddGameObject<Runner>(false);
-
 	//タイトル表示
 	Manager::AddGameObject<Polygon2D>(
 		0.0f,
@@ -34,6 +30,12 @@ void Title::Init()
 		static_cast<float>(SCREEN_WIDTH),
 		static_cast<float>(SCREEN_HEIGHT),
 		L"asset\\texture\\Title1.png");
+
+	////BGM再生
+//    Audio* bgm = AddComponent<Audio>(this);
+//    bgm->Load("asset\\audio\\title.mp3");
+//    bgm->Play(true);
+
 }
 void Title::Uninit()
 {

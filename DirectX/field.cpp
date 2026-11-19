@@ -57,7 +57,7 @@ void Field::Init()
 
 ////BGM再生
 //    Audio* bgm = AddComponent<Audio>(this);
-//    bgm->Load("asset\\audio\\bgm.wav");
+//    bgm->Load("asset\\audio\\game.mp3");
 //    bgm->Play(true);
 
 }

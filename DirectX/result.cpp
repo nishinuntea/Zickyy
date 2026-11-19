@@ -29,6 +29,12 @@ void Result::Init()
 		static_cast<float>(SCREEN_WIDTH),
 		static_cast<float>(SCREEN_HEIGHT),
 		L"asset\\texture\\Result.png");
+
+	////BGMçƒê∂
+//    Audio* bgm = AddComponent<Audio>(this);
+//    bgm->Load("asset\\audio\\result.mp3");
+//    bgm->Play(true);
+
 }
 void Result::Uninit()
 {
